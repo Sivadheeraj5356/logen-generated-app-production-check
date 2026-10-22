@@ -10,7 +10,7 @@
 <main class="wrap">
   <header>
     <h1>Generated App Production Check</h1>
-    <p class="sub">AI app builders get you from idea to working app fast. The gap between "works in preview" and "safe to deploy" is where users get hurt. Paste generated code, one line per file: <code>path | code</code>. The check flags leaked secrets, dev URLs in production config, unverified payment webhooks, private routes without auth, schema changes without migrations, and PII in logs.</p>
+    <p class="sub">AI app builders get you from idea to working app fast. The gap between "works in preview" and "safe to deploy" is where users get hurt. Paste generated code, one line per file: <code>path | code</code>. The check uses line-level heuristics to flag potential issues - possible leaked secrets, dev URLs in production config, unverified payment webhooks, private routes without visible auth, schema changes without migrations, and PII in logs. It is not a security audit: it can only see what you paste, one line at a time.</p>
   </header>
 
   <section class="card">
@@ -18,7 +18,7 @@
     <textarea id="code" rows="12" spellcheck="false">server/index.js | app.listen(process.env.PORT)
 routes/account/billing.js | export default function Billing() { return &lt;CardForm/&gt; }
 routes/webhook.js | app.post("/stripe/webhook", (req) =&gt; markPaid(req.body))
-config.js | const apiKey = "sk_live_9f27abce41d2"
+config.js | const apiKey = "sk_live_EXAMPLEONLY000"
 fly.toml | APP_URL = "http://localhost:3000"
 db/schema.ts | CREATE TABLE payments (id serial, amount int)
 lib/notify.js | console.log("sending receipt to", user.email)</textarea>
