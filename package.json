@@ -1,0 +1,7 @@
+{
+  "name": "logen-generated-app-production-check",
+  "version": "1.0.0",
+  "description": "QA check for AI-generated apps: secrets, auth, webhooks, dev URLs, migrations and PII logs before a generated app ships",
+  "scripts": { "test": "node --test" },
+  "license": "MIT"
+}
