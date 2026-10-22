@@ -5,7 +5,7 @@ const { check } = require('../check.js');
 const codes = (r) => r.findings.map((f) => f.code);
 
 test('flags a hardcoded API key in generated code', () => {
-  const r = check('config.js | const apiKey = "sk_live_abcdef123456"');
+  const r = check('config.js | const apiKey = "sk_live_EXAMPLEONLY000"');
   assert.ok(codes(r).includes('HARDCODED_SECRET'));
 });
 
