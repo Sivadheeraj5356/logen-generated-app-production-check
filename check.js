@@ -34,31 +34,31 @@
 
     files.forEach((f) => {
       if (SECRET_RE.test(f.text))
-        push('error', 'HARDCODED_SECRET', `${f.path}:${f.line} - credential literal in generated code: "${f.text.slice(0, 60)}". Move to env vars before this deploys.`);
+        push('error', 'HARDCODED_SECRET', `${f.path}:${f.line} - possible credential literal in generated code: "${f.text.slice(0, 60)}". If this is a real secret, move it to env vars before deploy; the demo values shipped with this tool are synthetic.`);
       if (isProdConfig(f) && DEV_URL_RE.test(f.text))
-        push('error', 'DEV_URL_IN_PROD', `${f.path}:${f.line} - production config points at a dev URL: "${f.text.slice(0, 60)}".`);
+        push('error', 'DEV_URL_IN_PROD', `${f.path}:${f.line} - production-named config references a dev URL: "${f.text.slice(0, 60)}". Verify whether this is intended.`);
       if (/webhook/i.test(f.path + ' ' + f.text) && /(stripe|razorpay|payment)/i.test(f.text) && !/(signature|verify|constructEvent)/i.test(f.text))
-        push('error', 'WEBHOOK_UNVERIFIED', `${f.path}:${f.line} - payment webhook handler with no signature verification: "${f.text.slice(0, 60)}". Anyone can forge paid events.`);
+        push('error', 'WEBHOOK_UNVERIFIED', `${f.path}:${f.line} - payment webhook line with no signature verification visible here: "${f.text.slice(0, 60)}". Verification may live in another file not pasted; if it is genuinely absent, forged events would be possible.`);
       if (PII_RE.test(f.text))
-        push('warn', 'PII_IN_LOGS', `${f.path}:${f.line} - logs a personal field: "${f.text.slice(0, 60)}".`);
+        push('warn', 'PII_IN_LOGS', `${f.path}:${f.line} - appears to log a personal field: "${f.text.slice(0, 60)}". Review whether this should be logged.`);
       if (isRoute(f) && /(private|protected|account|billing|admin)/i.test(f.path) && !/(auth|session|requireUser|guard)/i.test(f.text))
-        push('error', 'AUTH_MISSING', `${f.path}:${f.line} - private route with no auth check visible on this line: "${f.text.slice(0, 60)}".`);
+        push('error', 'AUTH_MISSING', `${f.path}:${f.line} - private-looking route with no auth check on this line: "${f.text.slice(0, 60)}". A guard may be applied in middleware or a parent layout not pasted here; if not, the route may be exposed.`);
     });
 
     const hasSchema = files.some((f) => /(schema|model)/i.test(f.path) || /(CREATE TABLE|addColumn|new table)/i.test(f.text));
     const hasMigration = [...paths].some((p) => /migrat/i.test(p));
     if (hasSchema && !hasMigration)
-      push('warn', 'SCHEMA_WITHOUT_MIGRATION', 'Schema/model definitions present but no migration files - the deploy cannot evolve the database safely.');
+      push('warn', 'SCHEMA_WITHOUT_MIGRATION', 'Schema/model definitions present but no migration files in the pasted input. Migrations may exist outside the pasted set; if they do not, deploys may not evolve the database safely.');
 
     const hasEntry = files.some(isServerEntry);
     const hasErrorHandler = files.some((f) => /(errorHandler|app\.use\(\s*\(err|on_error|rescue_from)/.test(f.text));
     if (hasEntry && !hasErrorHandler)
-      push('warn', 'NO_ERROR_HANDLER', 'Server entry found but no error-handling middleware - unhandled errors will crash or leak stack traces.');
+      push('warn', 'NO_ERROR_HANDLER', 'No error-handling middleware detected in the pasted input - it may live in a file not pasted. If genuinely absent, unhandled errors may crash the process or leak stack traces.');
 
     if (skipped.length)
       push('warn', 'UNPARSED', `Line(s) ${skipped.join(', ')} skipped - expected path | code.`);
     if (!findings.length)
-      push('ok', 'PRODUCTION_READY', 'No leaked secrets, dev URLs, unverified webhooks, unauthenticated private routes, or PII logs detected.');
+      push('ok', 'PRODUCTION_READY', 'No issues detected by these line-level heuristics. This is not a security audit - see the Limitations section of the README.');
     return { findings, stats: { files: paths.size, lines: files.length } };
   }
 
